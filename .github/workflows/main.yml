@@ -31,5 +31,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: processed-dataset
-        path: preprocessing/Customer-Churn/processed.csv
+        path: preprocessing/processed.csv
         if-no-files-found: warn
