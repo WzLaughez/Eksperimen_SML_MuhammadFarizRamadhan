@@ -28,7 +28,8 @@ jobs:
       run: python preprocessing/automate_Muhammad-Fariz-Ramadhan.py
 
     - name: Upload processed data
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: processed-dataset
         path: preprocessing/Customer-Churn/processed.csv
+        if-no-files-found: warn
