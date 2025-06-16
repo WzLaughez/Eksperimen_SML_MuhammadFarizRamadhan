@@ -6,7 +6,7 @@ from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
 import pandas as pd
 
-def preprocess_data(data, target_column, save_path, file_path, unnecessary_cols=[]):
+def preprocess_data(data, target_column, save_path, file_path, unnecessary_cols=None):
 
     # Membuang kolom yang tidak diperlukan
     if unnecessary_cols:
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         target_column='Churn',
         save_path='preprocessing/preprocessor.pkl',
         file_path='preprocessing/kolom.csv',
-        unnecessary_cols=['customerID, Churn']
+        unnecessary_cols=['customerID']
     )
 
     # Gabungkan X_train dan y_train
