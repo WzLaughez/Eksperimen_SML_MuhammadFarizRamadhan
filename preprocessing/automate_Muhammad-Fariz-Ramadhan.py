@@ -71,6 +71,11 @@ if __name__ == "__main__":
         file_path='kolom.csv',
         unnecessary_cols='customerID'
 )
+    
+    # Tambahkan ini:
+    if y_train.dtype == 'object':
+        y_train = y_train.map({'Yes': 1, 'No': 0})
+        y_test = y_test.map({'Yes': 1, 'No': 0})
 
     if hasattr(X_train, "toarray"):  # jika hasilnya sparse matrix
         X_train = X_train.toarray()
