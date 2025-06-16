@@ -76,7 +76,7 @@ if __name__ == "__main__":
         target_column='Churn',
         save_path='preprocessing/preprocessor.pkl',
         file_path='preprocessing/kolom.csv',
-        unnecessary_cols='customerID'
+        unnecessary_cols=['customerID']
     )
 
     # Gabungkan X_train dan y_train
