@@ -68,3 +68,24 @@ def preprocess_data(data, target_column, save_path, file_path, unnecessary_cols=
     dump(preprocessor, save_path)
 
     return X_train, X_test, y_train, y_test
+
+if __name__ == "__main__":
+    df = pd.read_csv("Customer-Churn.csv")  # Sesuaikan path ini
+    X_train, X_test, y_train, y_test = preprocess_data(
+        data=df,
+        target_column='Churn',
+        save_path='preprocessing/preprocessor.pkl',
+        file_path='preprocessing/kolom.csv',
+        unnecessary_cols='customerID'
+    )
+
+    # Gabungkan X_train dan y_train
+    import numpy as np
+    if hasattr(X_train, "toarray"):  # jika hasilnya sparse matrix
+        X_train = X_train.toarray()
+        X_test = X_test.toarray()
+
+    # Simpan ke file CSV
+    train_df = pd.DataFrame(X_train)
+    train_df["target"] = y_train.values
+    train_df.to_csv("preprocessing/Customer-Churn/processed.csv", index=False)
