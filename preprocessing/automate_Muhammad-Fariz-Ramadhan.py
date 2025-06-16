@@ -80,8 +80,12 @@ if __name__ == "__main__":
     if hasattr(X_train, "toarray"):  # jika hasilnya sparse matrix
         X_train = X_train.toarray()
         X_test = X_test.toarray()
+    # Ambil nama kolom yang sudah disimpan
+    encoder = preprocessor.named_transformers_['cat'].named_steps['encoder']
+    encoded_cols = encoder.get_feature_names_out(preprocessor.transformers_[1][2])
+    full_cols = preprocessor.transformers_[0][2] + encoded_cols.tolist()
 
-    # Simpan ke file CSV
-    train_df = pd.DataFrame(X_train)
+    # Simpan ke file CSV dengan nama kolom asli
+    train_df = pd.DataFrame(X_train, columns=full_cols)
     train_df["target"] = y_train.values
     train_df.to_csv("preprocessing/processed.csv", index=False)
