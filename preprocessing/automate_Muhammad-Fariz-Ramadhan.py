@@ -5,82 +5,73 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
 import pandas as pd
+import numpy as np
+def preprocess_data(data, target_column, save_path, file_path, unnecessary_cols):
+    # Konversi TotalCharges
+    data["TotalCharges"] = pd.to_numeric(data["TotalCharges"], errors="coerce")\
 
-def preprocess_data(data, target_column, save_path, file_path, unnecessary_cols=None):
+    # Buang kolom tidak perlu
+    data = data.drop(columns=unnecessary_cols, errors='ignore')
 
-    # Membuang kolom yang tidak diperlukan
-    if unnecessary_cols:
-        data = data.drop(columns=unnecessary_cols, errors='ignore')
-    # Coba ubah kolom object ke float jika memungkinkan (untuk kasus seperti 'TotalCharges')
-    for col in data.select_dtypes(include=['object']).columns:
-        # Jangan ubah kolom target
-        if col == target_column:
-            continue
-        try:
-            data[col] = pd.to_numeric(data[col])
-        except ValueError:
-            pass  # Tetap biarkan kolom ini sebagai object jika gagal konversi
-        
-    # Menentukan fitur numerik dan kategoris
-    numeric_features = data.select_dtypes(include=['float64', 'int64']).columns.tolist()
-    categorical_features = data.select_dtypes(include=['object']).columns.tolist()
-    column_names = data.columns
+    # Pisah X, y
+    X = data.drop(columns=[target_column])
+    y = data[target_column]
 
-    # Membuat DataFrame kosong dengan nama kolom
-    df_header = pd.DataFrame(columns=column_names)
+    # Kolom numerik & kategorikal
+    numeric_features = X.select_dtypes(include=['float64', 'int64']).columns.tolist()
+    categorical_features = X.select_dtypes(include=['object']).columns.tolist()
 
-    # Menyimpan nama kolom sebagai header tanpa data
-    df_header.to_csv(file_path, index=False)
-    print(f"Nama kolom berhasil disimpan ke: {file_path}")
+    # Simpan header awal
+    pd.DataFrame(columns=X.columns).to_csv(file_path, index=False)
 
-    # Pipeline untuk fitur numerik
-    numeric_transformer = Pipeline(steps=[
+    # Pipeline numerik
+    numeric_transformer = Pipeline([
         ('imputer', SimpleImputer(strategy='mean')),
         ('scaler', MinMaxScaler())
     ])
 
-    # Pipeline untuk fitur kategoris
-    categorical_transformer = Pipeline(steps=[
-        ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
+    # Pipeline kategorik
+    categorical_transformer = Pipeline([
         ('encoder', OneHotEncoder(handle_unknown='ignore'))
     ])
 
-    # Column Transformer
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ('num', numeric_transformer, numeric_features),
-            ('cat', categorical_transformer, categorical_features)
-        ]
+    # Gabung preprocessor
+    preprocessor = ColumnTransformer([
+        ('num', numeric_transformer, numeric_features),
+        ('cat', categorical_transformer, categorical_features)
+    ])
+
+    # Split data
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
     )
 
-    # Memisahkan target
-    X = data.drop(columns=[target_column])
-    y = data[target_column]
-
-    # Membagi data
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-    # Fitting dan transformasi data pada training set
+    # Fit-transform
     X_train = preprocessor.fit_transform(X_train)
-    # Transformasi data pada testing set
     X_test = preprocessor.transform(X_test)
+
     # Simpan pipeline
     dump(preprocessor, save_path)
 
-    return X_train, X_test, y_train, y_test
+    # Simpan nama kolom hasil transformasi
+    encoder = preprocessor.named_transformers_['cat'].named_steps['encoder']
+    encoded_cols = encoder.get_feature_names_out(categorical_features)
+    full_cols = numeric_features + encoded_cols.tolist()
+    pd.DataFrame(columns=full_cols).to_csv("encoded_columns.csv", index=False)
+
+    return X_train, X_test, y_train, y_test, preprocessor
+
 
 if __name__ == "__main__":
     df = pd.read_csv("Customer-Churn.csv")  # Sesuaikan path ini
-    X_train, X_test, y_train, y_test = preprocess_data(
+    X_train, X_test, y_train, y_test, preprocessor = preprocess_data(
         data=df,
         target_column='Churn',
-        save_path='preprocessing/preprocessor.pkl',
-        file_path='preprocessing/kolom.csv',
-        unnecessary_cols=['customerID']
-    )
+        save_path='preprocessor.pkl',
+        file_path='kolom.csv',
+        unnecessary_cols='customerID'
+)
 
-    # Gabungkan X_train dan y_train
-    import numpy as np
     if hasattr(X_train, "toarray"):  # jika hasilnya sparse matrix
         X_train = X_train.toarray()
         X_test = X_test.toarray()
