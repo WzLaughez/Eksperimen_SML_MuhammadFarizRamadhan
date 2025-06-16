@@ -79,4 +79,4 @@ if __name__ == "__main__":
     # Simpan ke file CSV
     train_df = pd.DataFrame(X_train)
     train_df["target"] = y_train.values
-    train_df.to_csv("preprocessing/Customer-Churn/processed.csv", index=False)
+    train_df.to_csv("preprocessing/processed.csv", index=False)
